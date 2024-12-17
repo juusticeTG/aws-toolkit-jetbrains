@@ -7,9 +7,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 import software.aws.toolkits.jetbrains.services.amazonq.auth.AuthFollowUpType
 import software.aws.toolkits.jetbrains.services.amazonq.messages.AmazonQMessage
+import software.aws.toolkits.jetbrains.services.amazonqCodeTest.messages.Button
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.DeletedFileInfo
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.NewFileZipInfo
 import software.aws.toolkits.jetbrains.services.cwc.messages.CodeReference
+import software.aws.toolkits.resources.message
 import java.time.Instant
 import java.util.UUID
 
@@ -104,6 +106,7 @@ sealed interface IncomingFeatureDevMessage : FeatureDevBaseMessage {
 sealed class UiMessage(
     open val tabId: String?,
     open val type: String,
+
 ) : FeatureDevBaseMessage {
     val time = Instant.now().epochSecond
     val sender = "featureDevChat"
@@ -252,6 +255,46 @@ enum class FollowUpTypes(
     CLOSE_SESSION("CloseSession"),
 }
 
+data class Button(
+    val id: String,
+    val text: String,
+    val description: String? = null,
+    val icon: String? = null,
+    val keepCardAfterClick: Boolean? = false,
+    val disabled: Boolean? = false,
+    val waitMandatoryFormItems: Boolean? = false,
+    val position: String = "inside",
+    val status: String = "primary",
+)
+
+//val cancelTestGenButton = Button(
+//    id = "doc_stop_generate",
+//    text = message("general.cancel"),
+//    icon = "cancel"
+//)
+//data class ProgressField(
+//    val title: String? = null,
+//    val value: Int? = null,
+//    val valueText: String? = null,
+//    val status: String? = null,
+//    val actions: List<Button>? = null,
+//    val text: String? = null,
+//)
+//
+//data class PromptProgressMessage(
+//    @JsonProperty("tabID") override val tabId: String,
+//    val progressField: ProgressField? = null,
+//) : UiMessage(
+//    tabId = tabId,
+//    type = "updatePromptProgress",
+//)
+
+//val cancellingProgressField = ProgressField(
+//    status = "default",
+//    text = message("general.canceling"),
+//    value = -1,
+//    actions = emptyList()
+//)
 // Util classes
 data class ReducedCodeReference(
     val information: String,

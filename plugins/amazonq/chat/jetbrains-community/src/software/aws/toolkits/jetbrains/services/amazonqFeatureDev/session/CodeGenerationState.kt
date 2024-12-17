@@ -8,6 +8,7 @@ import software.amazon.awssdk.services.codewhispererruntime.model.CodeGeneration
 import software.aws.toolkits.core.utils.getLogger
 import software.aws.toolkits.core.utils.warn
 import software.aws.toolkits.jetbrains.services.amazonq.messages.MessagePublisher
+import software.aws.toolkits.jetbrains.services.amazonqCodeTest.messages.Button
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.CodeGenerationException
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.EmptyPatchException
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.FEATURE_NAME
@@ -17,8 +18,10 @@ import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.GuardrailsExce
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.NoChangeRequiredException
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.PromptRefusalException
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.ThrottlingException
+import software.aws.toolkits.jetbrains.services.amazonqCodeTest.messages.ProgressField
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendAnswerPart
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendUpdatePlaceholder
+import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendUpdatePromptProgress
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.util.CancellationTokenSource
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.util.getChangeIdentifier
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.util.getDiffMetrics
@@ -44,9 +47,9 @@ class CodeGenerationState(
     var currentCodeGenerationId: String? = "EMPTY_CURRENT_CODE_GENERATION_ID",
     override var token: CancellationTokenSource?,
     override var diffMetricsProcessed: DiffMetricsProcessed,
+
 ) : SessionState {
     override val phase = SessionStatePhase.CODEGEN
-
     override suspend fun interact(action: SessionStateAction): SessionStateInteraction<SessionState> {
         val startTime = System.currentTimeMillis()
         var result: MetricResult = MetricResult.Succeeded
@@ -56,6 +59,21 @@ class CodeGenerationState(
         var numberOfReferencesGenerated: Int? = null
         var numberOfFilesGenerated: Int? = null
         try {
+            messenger.sendUpdatePromptProgress(tabId = tabID, progressField = ProgressField(
+                status = "default",
+                text = message("amazonqFeatureDev.code_generation.generating_code"),
+                value = -1,
+                actions = listOf(
+                    Button(
+                        id = "cancel-running-task",
+                        text = message("general.cancel"),
+                        icon = "cancel",
+                        disabled = false
+                        )
+                    )
+                )
+            )
+
             val codeGenerationId = UUID.randomUUID()
 
             val response =
@@ -251,7 +269,6 @@ private suspend fun CodeGenerationState.generateCode(
             else -> error("Unknown status: ${codeGenerationResultState.codeGenerationStatus().status()}")
         }
     }
-
     return CodeGenerationResult(emptyList(), emptyList(), emptyList())
 }
 

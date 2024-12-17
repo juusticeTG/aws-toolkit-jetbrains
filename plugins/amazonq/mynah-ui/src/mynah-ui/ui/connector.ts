@@ -248,7 +248,6 @@ export class Connector {
         if (message.data === undefined) {
             return
         }
-
         // TODO: potential json parsing error exists. Need to determine the failing case.
         const messageData = JSON.parse(message.data)
 

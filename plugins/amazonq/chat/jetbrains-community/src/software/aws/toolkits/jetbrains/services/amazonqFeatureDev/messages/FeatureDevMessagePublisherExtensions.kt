@@ -5,6 +5,8 @@ package software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages
 
 import software.aws.toolkits.jetbrains.services.amazonq.auth.AuthNeededState
 import software.aws.toolkits.jetbrains.services.amazonq.messages.MessagePublisher
+import software.aws.toolkits.jetbrains.services.amazonqCodeTest.messages.ProgressField
+import software.aws.toolkits.jetbrains.services.amazonqCodeTest.messages.PromptProgressMessage
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.CodeReferenceGenerated
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.DeletedFileInfo
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.NewFileZipInfo
@@ -217,5 +219,11 @@ suspend fun MessagePublisher.sendCodeResult(
             references = refs,
             messageId = messageId.toString(),
         ),
+    )
+}
+
+suspend fun MessagePublisher.sendUpdatePromptProgress(tabId: String, progressField: ProgressField?) {
+    this.publish(
+        PromptProgressMessage(tabId, progressField)
     )
 }

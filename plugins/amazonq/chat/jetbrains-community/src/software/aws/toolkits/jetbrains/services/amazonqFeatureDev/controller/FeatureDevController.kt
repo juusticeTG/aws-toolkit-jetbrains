@@ -33,6 +33,7 @@ import software.aws.toolkits.jetbrains.services.amazonq.RepoSizeError
 import software.aws.toolkits.jetbrains.services.amazonq.apps.AmazonQAppInitContext
 import software.aws.toolkits.jetbrains.services.amazonq.auth.AuthController
 import software.aws.toolkits.jetbrains.services.amazonq.toolwindow.AmazonQToolWindowFactory
+import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendUpdatePromptProgress
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.CodeIterationLimitException
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.DEFAULT_RETRY_LIMIT
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.FEATURE_NAME
@@ -371,6 +372,7 @@ class FeatureDevController(
 
     private suspend fun handleStopMessage(message: IncomingFeatureDevMessage.StopResponse) {
         val session: Session?
+        clearProgress(message.tabId)
         UiTelemetry.click(null as Project?, "amazonq_stopCodeGeneration")
         messenger.sendAnswer(
             tabId = message.tabId,
@@ -679,7 +681,6 @@ class FeatureDevController(
             }
 
             session.preloader(message, messenger)
-
             when (session.sessionState.phase) {
                 SessionStatePhase.CODEGEN -> onCodeGeneration(session, message, tabId)
                 else -> null
@@ -810,7 +811,9 @@ class FeatureDevController(
             reason = reason?.toString()
         )
     }
-
+    private suspend fun clearProgress(tabId: String) {
+        messenger.sendUpdatePromptProgress(tabId = tabId, progressField = null)
+    }
     private fun sendFeedback() {
         runInEdt {
             FeatureDevFeedbackDialog(context.project).show()

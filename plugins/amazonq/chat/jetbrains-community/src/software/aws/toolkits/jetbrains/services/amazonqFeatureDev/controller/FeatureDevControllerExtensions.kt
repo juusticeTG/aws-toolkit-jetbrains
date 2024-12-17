@@ -5,6 +5,7 @@ package software.aws.toolkits.jetbrains.services.amazonqFeatureDev.controller
 
 import com.intellij.notification.NotificationAction
 import software.aws.toolkits.jetbrains.services.amazonq.messages.MessagePublisher
+import software.aws.toolkits.jetbrains.services.amazonqCodeTest.messages.ProgressField
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.CODE_GENERATION_RETRY_LIMIT
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.FeatureDevMessageType
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.FollowUp
@@ -16,6 +17,7 @@ import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendC
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendCodeResult
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendSystemPrompt
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendUpdatePlaceholder
+import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.messages.sendUpdatePromptProgress
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.CodeReferenceGenerated
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.DeletedFileInfo
 import software.aws.toolkits.jetbrains.services.amazonqFeatureDev.session.NewFileZipInfo
@@ -45,11 +47,30 @@ suspend fun FeatureDevController.onCodeGeneration(
         },
     )
 
+    this.messenger.sendUpdatePromptProgress(
+        tabId = tabId,
+        progressField = ProgressField(
+            status = "default",
+            text = message("general.canceling"),
+            value = -1,
+            actions = emptyList()
+        )
+    )
+
     try {
         this.messenger.sendAnswer(
             tabId = tabId,
             message = message("amazonqFeatureDev.chat_message.requesting_changes"),
             messageType = FeatureDevMessageType.AnswerStream,
+        )
+        this.messenger.sendUpdatePromptProgress(
+            tabId = tabId,
+            progressField = ProgressField(
+                status = "default",
+                text = message("general.canceling"),
+                value = -1,
+                actions = emptyList()
+            )
         )
         var state = session.sessionState
 
@@ -61,7 +82,7 @@ suspend fun FeatureDevController.onCodeGeneration(
             return
         }
 
-        messenger.sendUpdatePlaceholder(tabId = tabId, newPlaceholder = message("amazonqFeatureDev.placeholder.generating_code"))
+//        messenger.sendUpdatePlaceholder(tabId = tabId, newPlaceholder = message("amazonqFeatureDev.placeholder.generating_code"))
 
         session.send(message) // Trigger code generation
 

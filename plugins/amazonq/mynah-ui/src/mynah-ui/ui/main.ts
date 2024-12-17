@@ -581,6 +581,9 @@ export const createMynahUI = (
             }
 
             if (tabsStorage.getTab(tabID)?.type === 'featuredev') {
+                if (eventId === 'cancel-running-task') {
+                    connector.onStopChatResponse(tabID);
+                }
                 mynahUI.addChatItem(tabID, {
                     type: ChatItemType.ANSWER_STREAM,
                 })

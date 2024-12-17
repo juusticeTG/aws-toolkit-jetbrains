@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ChatItem, ChatItemAction, ChatItemType, FeedbackPayload } from '@aws/mynah-ui-chat'
+import { ChatItem, ChatItemAction, ChatItemType, FeedbackPayload, ProgressField } from '@aws/mynah-ui-chat'
 import { ExtensionMessage } from '../commands'
 import { TabType, TabsStorage } from '../storages/tabsStorage'
 import { CodeReference } from './amazonqCommonsConnector'
@@ -37,6 +37,7 @@ export interface ConnectorProps {
     onNewTab: (tabType: TabType) => void
     tabsStorage: TabsStorage
     onFileComponentUpdate: (tabID: string, filePaths: DiffTreeFileInfo[], deletedFiles: DiffTreeFileInfo[], messageId: string, disableFileActions: boolean) => void
+    onUpdatePromptProgress: (tabID: string, progressField: ProgressField | null) => void;
 }
 
 export class Connector {
@@ -52,6 +53,7 @@ export class Connector {
     private readonly followUpGenerator: FollowUpGenerator
     private readonly onNewTab
     private readonly onFileComponentUpdate
+    private readonly onUpdatePromptProgress
 
     constructor(props: ConnectorProps) {
         this.sendMessageToExtension = props.sendMessageToExtension
@@ -66,6 +68,7 @@ export class Connector {
         this.followUpGenerator = new FollowUpGenerator()
         this.onNewTab = props.onNewTab
         this.onFileComponentUpdate = props.onFileComponentUpdate
+        this.onUpdatePromptProgress = props.onUpdatePromptProgress;
     }
 
     onCodeInsertToCursorPosition = (
@@ -282,6 +285,23 @@ export class Connector {
 
         if (messageData.type === 'openNewTabMessage') {
             this.onNewTab('featuredev')
+            return
+        }
+
+        if (messageData.type === 'updatePromptProgress') {
+            this.onUpdatePromptProgress(messageData.tabId, messageData.progressField)
+        }
+
+        if (messageData.type === 'cancelRunningTask') {
+            this.onStopChatResponse(messageData.tabID);
+            return;
+        }
+        if (messageData.command === 'stop-response') {
+            this.sendMessageToExtension({
+                command: 'stop-response',
+                tabID: messageData.tabID,
+                tabType: 'featuredev',
+            })
             return
         }
     }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ChatItem, ChatItemType, MynahUI, NotificationType } from '@aws/mynah-ui-chat'
+import { ChatItem, ChatItemType, MynahUI, NotificationType, MynahIcons } from '@aws/mynah-ui-chat'
 import { Connector } from '../connector'
 import { TabType, TabsStorage } from '../storages/tabsStorage'
 import { TabDataGenerator } from '../tabs/generator'
@@ -80,9 +80,21 @@ export class MessageController {
 
             this.mynahUI.updateStore(selectedTab.id, {
                 loadingChat: true,
-                cancelButtonWhenLoading: false,
                 promptInputDisabledState: true,
-            })
+                promptInputProgress: {
+                    status: 'default',
+                    text: 'Processing message...',
+                    value: -1,
+                    actions: [{
+                        id: 'cancel-running-task',
+                        text: 'Cancel',
+                        icon: MynahIcons.CANCEL,
+                        disabled: false,
+                    }]
+                }
+            });
+            console.log('Progress bar should be visible now for tab:', selectedTab.id); // Add this log
+
             this.mynahUI.addChatItem(selectedTab.id, message)
             this.mynahUI.addChatItem(selectedTab.id, {
                 type: ChatItemType.ANSWER_STREAM,
@@ -111,9 +123,19 @@ export class MessageController {
 
             this.mynahUI.updateStore(newTabID, {
                 loadingChat: true,
-                cancelButtonWhenLoading: false,
                 promptInputDisabledState: true,
-            })
+                promptInputProgress: {
+                    status: 'default',
+                    text: 'Processing message...',
+                    value: -1,
+                    actions: [{
+                        id: 'cancel-running-task',
+                        text: 'Cancel',
+                        icon: MynahIcons.CANCEL,
+                        disabled: false,
+                    }]
+                }
+            });
 
             // We have race condition here with onTabAdd Ui event. This way we need to update store twice to be sure
             this.tabsStorage.addTab({
